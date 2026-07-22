@@ -1,0 +1,39 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:33:36 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:52:37 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:57:37 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:65:45 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:70:45 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:76:45 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:84:34 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:92:34 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:96:34 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/data/repository/MattingRepository.kt:100:26 Argument type mismatch: actual type is 'String', but 'Exception' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/network/MeituInterceptor.kt:20:33 Argument type mismatch: actual type is '(Pair<String, String>, ??? (Unknown type for value parameter value)) -> Unit', but '(Pair<String, String>) -> Unit' was expected.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/network/MeituInterceptor.kt:20:41 Cannot infer type for value parameter 'value'. Specify it explicitly.
+e: file:///Z:/2projects/HsiaoWear/app/src/main/java/com/example/hsiaowear/network/MeituInterceptor.kt:21:29 Argument type mismatch: actual type is 'Pair<String, String>', but 'String' was expected.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3s
+7 actionable tasks: 1 executed, 6 up-to-date

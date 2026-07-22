@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">小不衣橱</string>
+
+    <string name="nav_today">今日</string>
+    <string name="nav_wardrobe">衣橱</string>
+    <string name="nav_lobster">AI助手</string>
+    <string name="nav_settings">设置</string>
+
+    <string name="wardrobe_title">我的衣橱</string>
+    <string name="wardrobe_search_placeholder">搜索衣物…</string>
+    <string name="wardrobe_add">添加衣物</string>
+    <string name="wardrobe_empty">暂无衣物</string>
+    <string name="wardrobe_empty_subtitle">点击添加衣物开始管理您的衣橱</string>
+
+    <string name="today_title">今日穿搭</string>
+    <string name="today_inspiration">今日灵感</string>
+    <string name="today_inspiration_subtitle">根据你的衣橱，为你精选今日穿搭</string>
+    <string name="today_loading">正在为你推荐…</string>
+    <string name="today_empty">暂无推荐</string>
+    <string name="today_empty_subtitle">添加衣物后获取智能穿搭推荐</string>
+    <string name="today_refresh">刷新推荐</string>
+    <string name="today_outfit_recommendation">今日穿搭推荐</string>
+    <string name="today_reason">推荐理由</string>
+    <string name="today_reason_placeholder">AI正在分析天气和您的衣橱，为您生成穿搭建议…</string>
+
+    <string name="lobster_title">AI助手</string>
+    <string name="lobster_placeholder">输入您的穿搭问题…</string>
+    <string name="lobster_send">发送</string>
+    <string name="lobster_empty">开始对话</string>
+    <string name="lobster_empty_hint">输入您的穿搭问题，AI助手为您解答</string>
+
+    <string name="settings_title">设置</string>
+    <string name="settings_ai_provider">AI 服务</string>
+    <string name="settings_api_key">API Key</string>
+    <string name="settings_api_endpoint">API 地址</string>
+    <string name="settings_api_test">测试连接</string>
+    <string name="settings_api_testing">测试中…</string>
+    <string name="settings_api_configured">已配置</string>
+    <string name="settings_api_not_configured">未配置</string>
+    <string name="settings_model">模型</string>
+    <string name="settings_system_prompt">系统提示词</string>
+    <string name="settings_parameters">参数设置</string>
+    <string name="settings_temperature">温度</string>
+    <string name="settings_max_tokens">最大令牌数</string>
+    <string name="settings_appearance">外观设置</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_dark">深色模式</string>
+    <string name="settings_theme_light">浅色模式</string>
+    <string name="settings_font_size">字体大小</string>
+    <string name="settings_about">关于</string>
+    <string name="about_version">HsiaoWear v1.0</string>
+    <string name="about_desc">免费 · 本地 · 隐私 · AI</string>
+    <string name="about_detail_title">关于小不衣橱</string>
+    <string name="about_detail_body">小不衣橱是一款完全免费的衣橱管理应用。\n\n功能特性：\n• 本地数据存储，保护隐私安全\n• AI识别 - 拍照自动分类\n• AI推荐 - 智能搭配建议\n\n技术栈：\n• Kotlin + Jetpack Compose\n• Material 3 Design\n• Hilt DI\n• Room 数据库\n• DataStore 持久化</string>
+
+    <string name="onboarding_welcome">欢迎使用小不衣橱</string>
+    <string name="onboarding_welcome_subtitle">一款完全免费的衣橱管理应用</string>
+    <string name="onboarding_privacy">数据存储在您的设备上，保护您的隐私安全</string>
+    <string name="onboarding_api_title">配置您的API地址</string>
+    <string name="onboarding_api_hint">请输入后端API服务器地址</string>
+    <string name="onboarding_api_test">测试连接</string>
+    <string name="onboarding_api_skip">跳过</string>
+    <string name="onboarding_api_hint_detail">配置后可使用AI识别、AI推荐等高级功能</string>
+    <string name="onboarding_features">AI 智能功能</string>
+    <string name="onboarding_feature_wardrobe">衣橱管理 - 简单记录衣物</string>
+    <string name="onboarding_feature_ai">AI识别 - 拍照自动分类</string>
+    <string name="onboarding_feature_recommend">AI推荐 - 智能搭配建议</string>
+    <string name="onboarding_start">开始使用</string>
+    <string name="onboarding_next">下一步</string>
+
+    <string name="add_clothing_title">添加衣物</string>
+    <string name="add_clothing_name">衣物名称</string>
+    <string name="add_clothing_category">分类</string>
+    <string name="add_clothing_color">颜色</string>
+    <string name="add_clothing_ai_recognize">AI识别属性</string>
+    <string name="add_clothing_save">保存</string>
+    <string name="add_clothing_name_error">请输入衣物名称</string>
+    <string name="add_clothing_category_error">请选择分类</string>
+    <string name="add_clothing_select_image">点击选择图片</string>
+    <string name="add_clothing_retake">重选图片</string>
+    <string name="add_clothing_matting">抠图中…</string>
+
+    <string name="clothing_detail_title">衣物详情</string>
+    <string name="clothing_edit">编辑</string>
+    <string name="clothing_delete">删除</string>
+
+    <string name="error_network">网络不可用</string>
+    <string name="error_api_config">请先配置API地址</string>
+    <string name="error_dismiss">关闭</string>
+    <string name="error_loading">加载失败</string>
+
+    <string name="delete_confirm_title">确认删除</string>
+    <string name="delete_confirm_msg">此操作无法撤销，该衣物将被删除。</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确认</string>
+</resources>
