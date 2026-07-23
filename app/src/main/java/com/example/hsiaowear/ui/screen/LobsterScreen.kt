@@ -201,7 +201,7 @@ private fun InputBar(
             onValueChange = onInputChange,
             placeholder = { Text(stringResource(R.string.lobster_placeholder), style = MaterialTheme.typography.bodyLarge) },
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,

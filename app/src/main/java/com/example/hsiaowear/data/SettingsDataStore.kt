@@ -35,6 +35,46 @@ class SettingsDataStore @Inject constructor(
         private val KEY_FONT_SCALE = intPreferencesKey("font_scale")
         private val KEY_TRYON_API_KEY = stringPreferencesKey("tryon_api_key")
         private val KEY_TRYON_API_HOST = stringPreferencesKey("tryon_api_host")
+        // 持久化 Body 抠图图片路径
+        private val KEY_MATTED_BODY_IMAGE_PATH = stringPreferencesKey("matted_body_image_path")
+        // 试衣历史记录（JSON 数组字符串）
+        private val KEY_TRYON_HISTORY = stringPreferencesKey("tryon_history")
+    }
+
+    val mattedBodyImagePathFlow: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_MATTED_BODY_IMAGE_PATH] ?: ""
+    }
+
+    val tryOnHistoryFlow: Flow<List<String>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_TRYON_HISTORY] ?: "[]"
+        try {
+            org.json.JSONArray(json).let { arr ->
+                (0 until arr.length()).map { arr.optString(it, "") }.filter { it.isNotBlank() }
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    suspend fun saveMattedBodyImagePath(path: String) {
+        context.dataStore.edit { it[KEY_MATTED_BODY_IMAGE_PATH] = path }
+    }
+
+    suspend fun clearMattedBodyImagePath() {
+        context.dataStore.edit { it.remove(KEY_MATTED_BODY_IMAGE_PATH) }
+    }
+
+    suspend fun addTryOnHistoryItem(path: String) {
+        context.dataStore.edit { prefs ->
+            val json = prefs[KEY_TRYON_HISTORY] ?: "[]"
+            val arr = try { org.json.JSONArray(json) } catch (_: Exception) { org.json.JSONArray() }
+            arr.put(path)
+            // 最多保留 100 条
+            while (arr.length() > 100) { arr.remove(0) }
+            prefs[KEY_TRYON_HISTORY] = arr.toString()
+        }
+    }
+
+    suspend fun clearTryOnHistory() {
+        context.dataStore.edit { it.remove(KEY_TRYON_HISTORY) }
     }
 
     val apiSettingsFlow: Flow<ApiSettings> = context.dataStore.data.map { prefs ->
@@ -109,6 +149,18 @@ class SettingsDataStore @Inject constructor(
     suspend fun updateVolcEngineKeys(accessKey: String, secretKey: String) {
         context.dataStore.edit {
             it[KEY_VOLCENGINE_ACCESS_KEY] = accessKey
+            it[KEY_VOLCENGINE_SECRET_KEY] = secretKey
+        }
+    }
+
+    suspend fun updateVolcengineAccessKey(accessKey: String) {
+        context.dataStore.edit {
+            it[KEY_VOLCENGINE_ACCESS_KEY] = accessKey
+        }
+    }
+
+    suspend fun updateVolcengineSecretKey(secretKey: String) {
+        context.dataStore.edit {
             it[KEY_VOLCENGINE_SECRET_KEY] = secretKey
         }
     }

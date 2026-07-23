@@ -41,6 +41,10 @@ class AIRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settingsDataStore: SettingsDataStore
 ) {
+    companion object {
+        private const val TAG = "HsiaoWear-AIRepo"
+    }
+
     private var llmApi: LLMApi? = null
     private var apiSettings: ApiSettings = ApiSettings()
 
@@ -177,10 +181,24 @@ class AIRepository @Inject constructor(
         clothes: List<ClothingRecommendationItem>
     ): Result<OutfitRecommendation> {
         if (clothes.isEmpty()) {
+            android.util.Log.w(TAG, "getOutfitRecommendation: 衣橱为空")
             return Result.Error(Exception("衣橱为空"))
         }
 
-        val api = llmApi ?: return Result.Error(Exception("API 未配置"))
+        val api = llmApi
+        if (api == null) {
+            android.util.Log.e(TAG, "getOutfitRecommendation: llmApi = null, API 未配置")
+            android.util.Log.e(TAG, "  baseUrl='${apiSettings.baseUrl}', apiKey='${apiSettings.apiKey.take(8)}...'")
+            return Result.Error(Exception("API 未配置，请检查设置中的 API Endpoint 和 API Key"))
+        }
+
+        android.util.Log.d(TAG, "=== getOutfitRecommendation 开始 ===")
+        android.util.Log.d(TAG, "天气: city=${weather.city}, temp=${weather.temperature}°C, desc=${weather.description}")
+        android.util.Log.d(TAG, "衣橱共有 ${clothes.size} 件衣服")
+        for (c in clothes) {
+            android.util.Log.d(TAG, "  衣物: id=${c.id}, name=${c.name}, category=${c.category}, color=${c.color}")
+        }
+        android.util.Log.d(TAG, "API 配置: baseUrl=${apiSettings.baseUrl}, model=${apiSettings.modelName}")
 
         val clothesInfo = buildClothesInfo(clothes)
         val prompt = """
@@ -238,11 +256,23 @@ $clothesInfo
                 temperature = 0.5,
                 max_tokens = 1024
             )
+            android.util.Log.d(TAG, "发送 LLM 请求: model=${apiSettings.modelName}")
             val response = api.chatCompletions(request)
+            android.util.Log.d(TAG, "LLM 响应收到: choices=${response.choices?.size ?: 0}")
+            if (response.choices.isNullOrEmpty()) {
+                android.util.Log.e(TAG, "LLM 响应 choices 为空或 null")
+                android.util.Log.e(TAG, "完整响应: ${com.google.gson.Gson().toJson(response)}")
+                return Result.Error(Exception("AI 返回空结果"))
+            }
             val content = response.choices.firstOrNull()?.message?.content ?: ""
+            android.util.Log.d(TAG, "AI 返回内容 (前 200 字符): ${content.take(200)}")
+            android.util.Log.d(TAG, "AI 返回内容 (完整长度): ${content.length} 字符")
             val recommendation = parseOutfitRecommendation(content, clothes)
+            android.util.Log.d(TAG, "解析结果: upperId=${recommendation.upperId}, lowerId=${recommendation.lowerId}, shoesId=${recommendation.shoesId}")
+            android.util.Log.d(TAG, "推荐理由: ${recommendation.reason.take(100)}")
             Result.Success(recommendation)
         } catch (e: Exception) {
+            android.util.Log.e(TAG, "getOutfitRecommendation 异常", e)
             Result.Error(e)
         }
     }
@@ -250,11 +280,8 @@ $clothesInfo
     private fun buildClothesInfo(clothes: List<ClothingRecommendationItem>): String {
         val byCategory = clothes.groupBy { it.category }
         val categoryNames = mapOf(
-            "上衣" to "上装",
+            "上装" to "上装",
             "下装" to "下装",
-            "外套" to "外套",
-            "连衣裙" to "连衣裙",
-            "配饰" to "配饰",
             "鞋" to "鞋履"
         )
 
@@ -275,34 +302,61 @@ $clothesInfo
             val startIdx = content.indexOf("{")
             val endIdx = content.lastIndexOf("}")
             if (startIdx == -1 || endIdx == -1) {
+                android.util.Log.w(TAG, "parseOutfitRecommendation: 找不到 JSON 花括号, content='${content.take(100)}'")
                 return getFallbackRecommendation(allClothes)
             }
 
             val jsonStr = content.substring(startIdx..endIdx)
+            android.util.Log.d(TAG, "parseOutfitRecommendation: 提取的 JSON: ${jsonStr.take(200)}")
+
             val gson = com.google.gson.Gson()
-            val parsed = gson.fromJson(jsonStr, Map::class.java)
+            // ===== 1. 尝试用 Map 方式解析 =====
+            val parsed: Map<*, *> = gson.fromJson(jsonStr, Map::class.java)
+            android.util.Log.d(TAG, "parseOutfitRecommendation: 解析的 Map: $parsed")
+
+            // 详细日志：打印每个字段的类型和值
+            listOf("upper_id", "upper_name", "upper_color", "lower_id", "lower_name", "lower_color", "shoes_id", "shoes_name", "shoes_color", "reason").forEach { key ->
+                val v = parsed[key]
+                android.util.Log.d(TAG, "  key='$key' value=$v type=${v?.javaClass?.name}")
+            }
+
+            // 安全的 ID 解析函数
+            fun parseId(value: Any?): Long? {
+                if (value == null) return null
+                return when (value) {
+                    is Number -> value.toLong()
+                    is String -> value.toLongOrNull()
+                    else -> {
+                        android.util.Log.w(TAG, "  parseId 无法识别的类型: ${value.javaClass.name}")
+                        null
+                    }
+                }
+            }
 
             return OutfitRecommendation(
-                upperId = (parsed["upper_id"] as? Number)?.toLong(),
+                upperId = parseId(parsed["upper_id"]),
                 upperName = parsed["upper_name"]?.toString() ?: "",
                 upperColor = parsed["upper_color"]?.toString() ?: "",
-                lowerId = (parsed["lower_id"] as? Number)?.toLong(),
+                lowerId = parseId(parsed["lower_id"]),
                 lowerName = parsed["lower_name"]?.toString() ?: "",
                 lowerColor = parsed["lower_color"]?.toString() ?: "",
-                shoesId = (parsed["shoes_id"] as? Number)?.toLong(),
+                shoesId = parseId(parsed["shoes_id"]),
                 shoesName = parsed["shoes_name"]?.toString() ?: "",
                 shoesColor = parsed["shoes_color"]?.toString() ?: "",
                 reason = parsed["reason"]?.toString() ?: ""
             )
         } catch (e: Exception) {
+            android.util.Log.e(TAG, "parseOutfitRecommendation 解析异常", e)
             return getFallbackRecommendation(allClothes)
         }
     }
 
     private fun getFallbackRecommendation(clothes: List<ClothingRecommendationItem>): OutfitRecommendation {
-        val tops = clothes.filter { it.category == "上衣" || it.category == "外套" }
-        val bottoms = clothes.filter { it.category == "下装" || it.category == "连衣裙" }
+        android.util.Log.w(TAG, "getFallbackRecommendation: 使用降级推荐，衣橱 ${clothes.size} 件")
+        val tops = clothes.filter { it.category == "上装" }
+        val bottoms = clothes.filter { it.category == "下装" }
         val shoes = clothes.filter { it.category == "鞋" }
+        android.util.Log.d(TAG, "  上装候选: ${tops.size} 件, 下装: ${bottoms.size} 件, 鞋: ${shoes.size} 件")
 
         return OutfitRecommendation(
             upperId = tops.firstOrNull()?.id,

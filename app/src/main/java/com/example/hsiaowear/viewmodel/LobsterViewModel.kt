@@ -321,11 +321,8 @@ class LobsterViewModel @Inject constructor(
         }
 
         val categoryNames = mapOf(
-            "上衣" to "上装",
+            "上装" to "上装",
             "下装" to "下装",
-            "外套" to "外套",
-            "连衣裙" to "连衣裙",
-            "配饰" to "配饰",
             "鞋" to "鞋履"
         )
 
@@ -384,7 +381,7 @@ class LobsterViewModel @Inject constructor(
         val recommendationResult = aiRepository.getOutfitRecommendation(weather, clothingItems)
         return if (recommendationResult is Result.Success) {
             val rec = recommendationResult.data
-            """✅ 今日穿搭推荐：
+            """今日穿搭推荐：
 
 📍 今日天气：${weather.city} ${weather.temperature}°C ${weather.description}
 
@@ -392,7 +389,7 @@ class LobsterViewModel @Inject constructor(
 👖 下装：${rec.lowerName}（${rec.lowerColor}）
 👟 鞋子：${rec.shoesName}（${rec.shoesColor}）
 
-💡 推荐理由：${rec.reason}"""
+推荐理由：${rec.reason}"""
         } else {
             "生成穿搭推荐时出错：${(recommendationResult as Result.Error).message}"
         }
@@ -432,11 +429,8 @@ class LobsterViewModel @Inject constructor(
 
     private fun getCategoryIcon(category: String): String {
         return when (category) {
-            "上衣" -> "👕"
+            "上装" -> "👕"
             "下装" -> "👖"
-            "外套" -> "🧥"
-            "连衣裙" -> "👗"
-            "配饰" -> "🎒"
             "鞋" -> "👟"
             else -> "👔"
         }

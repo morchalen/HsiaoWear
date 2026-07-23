@@ -108,4 +108,36 @@ object ImageUtils {
         }
         return destFile.absolutePath
     }
+
+    /**
+     * 将本地图片压缩后保存为临时文件，用于上传。
+     * @param filePath 原始图片路径
+     * @param maxWidth 最大宽度（默认 1024）
+     * @param quality  压缩质量 0-100（默认 80）
+     * @return 压缩后的文件路径，失败返回 null
+     */
+    fun compressImage(filePath: String, maxWidth: Int = 1024, quality: Int = 80): String? {
+        return try {
+            val original = BitmapFactory.decodeFile(filePath) ?: return null
+            val scaled = if (original.width > maxWidth || original.height > maxWidth) {
+                val scale = maxWidth.toFloat() / maxOf(original.width, original.height)
+                Bitmap.createScaledBitmap(original,
+                    (original.width * scale).toInt(),
+                    (original.height * scale).toInt(), true)
+            } else original
+
+            val tempFile = File.createTempFile("upload_", ".jpg")
+            FileOutputStream(tempFile).use { out ->
+                scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)
+            }
+
+            if (scaled !== original) scaled.recycle()
+            original.recycle()
+
+            tempFile.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 }

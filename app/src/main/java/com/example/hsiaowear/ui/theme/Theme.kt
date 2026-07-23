@@ -53,14 +53,8 @@ fun HsiaoWearTheme(
 }
 
 private fun darkScheme() = darkColorScheme(
-    primary = FunctionalBlueLight,
-    onPrimary = Black,
-    primaryContainer = FunctionalBlueContainer,
-    onPrimaryContainer = DarkOnBackground,
-    secondary = SystemGray5,
-    onSecondary = DarkOnBackground,
-    secondaryContainer = DarkSurfaceVariant,
-    onSecondaryContainer = DarkOnSurface,
+    primary = FunctionalBlue,
+    onPrimary = White,
     background = DarkBackground,
     onBackground = DarkOnBackground,
     surface = DarkSurface,
@@ -68,9 +62,7 @@ private fun darkScheme() = darkColorScheme(
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = DarkOnSurfaceVariant,
     error = FunctionalRed,
-    onError = OnPrimary,
-    errorContainer = FunctionalRedContainer,
-    onErrorContainer = DarkOnBackground,
+    onError = White,
     outline = DarkOnSurfaceVariant.copy(alpha = 0.3f),
     outlineVariant = DarkOnSurfaceVariant.copy(alpha = 0.15f),
     scrim = Black.copy(alpha = 0.6f)
@@ -78,13 +70,7 @@ private fun darkScheme() = darkColorScheme(
 
 private fun lightScheme() = lightColorScheme(
     primary = FunctionalBlue,
-    onPrimary = OnPrimary,
-    primaryContainer = FunctionalBlueContainer.copy(alpha = 0.15f),
-    onPrimaryContainer = LightOnBackground,
-    secondary = SystemGray4,
-    onSecondary = LightOnBackground,
-    secondaryContainer = LightSurfaceVariant,
-    onSecondaryContainer = LightOnSurface,
+    onPrimary = White,
     background = LightBackground,
     onBackground = LightOnBackground,
     surface = LightSurface,
@@ -92,9 +78,7 @@ private fun lightScheme() = lightColorScheme(
     surfaceVariant = LightSurfaceVariant,
     onSurfaceVariant = LightOnSurfaceVariant,
     error = FunctionalRed,
-    onError = OnPrimary,
-    errorContainer = FunctionalRedContainer.copy(alpha = 0.15f),
-    onErrorContainer = LightOnBackground,
+    onError = White,
     outline = LightOnSurfaceVariant.copy(alpha = 0.4f),
     outlineVariant = LightSurfaceVariant.copy(alpha = 0.2f),
     scrim = Black.copy(alpha = 0.6f)

@@ -32,20 +32,16 @@ val SystemGray6 = Color(0xFF8E8E93)   // 深灰 — 浅色模式正文 / 深色�
 
 // 红色 — 错误、删除、危险操作
 val FunctionalRed = Color(0xFFD0696F)
-val FunctionalRedContainer = Color(0xFF3D1A1C)      // 深色模式红色容器
 
 // 黄色 — 警告、提醒
 val FunctionalYellow = Color(0xFFD4A850)
-val FunctionalYellowContainer = Color(0xFF3D3018)   // 深色模式黄色容器
 
 // 绿色 — 成功、就绪、正常运行
 val FunctionalGreen = Color(0xFF5DA868)
-val FunctionalGreenContainer = Color(0xFF1A3320)     // 深色模式绿色容器
 
 // 蓝色 — 链接、选中态、主要操作（App 唯一主色调）
 val FunctionalBlue = Color(0xFF3964FE)            // 浅色/深色模式统一主色调
-val FunctionalBlueLight = Color(0xFF6B8AFF)       // 深色模式（更亮，保证可读性）
-val FunctionalBlueContainer = Color(0xFF1A2240)   // 深色模式蓝色容器
+val FunctionalBlueLight = Color(0xFF6B8AFF)       // 仅用于需要高亮的特殊场景
 
 // ============================================================
 // 三、主题色彩映射 (Theme Color Mappings)

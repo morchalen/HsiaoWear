@@ -11,11 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -27,20 +24,18 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,25 +44,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.hsiaowear.R
 import com.example.hsiaowear.ui.components.CategoryChips
 import com.example.hsiaowear.ui.components.ColorPicker
 import com.example.hsiaowear.util.ImageUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddClothingScreen(
     onSave: (name: String, category: String, color: String, imageUrl: String) -> Unit,
     onDismiss: () -> Unit,
-    onMatting: suspend (String) -> String? = { null }
+    onMatting: suspend (imagePath: String) -> String?
 ) {
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var name by remember { mutableStateOf("") }
     var category by remember { mutableStateOf<String?>(null) }
@@ -78,26 +70,17 @@ fun AddClothingScreen(
     // 图片相关状态
     var selectedImagePath by remember { mutableStateOf<String?>(null) }
     var isMatting by remember { mutableStateOf(false) }
-    var mattedImagePath by remember { mutableStateOf<String?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // 1. 复制到私有目录
             val localPath = ImageUtils.copyImageToPrivateDir(context, it)
             if (localPath != null) {
-                selectedImagePath = localPath
-                mattedImagePath = null
-                // 2. 发起抠图
                 isMatting = true
-                scope.launch {
-                    val result = withContext(Dispatchers.IO) {
-                        onMatting(localPath)
-                    }
-                    if (result != null) {
-                        mattedImagePath = result
-                    } // 抠图失败则保留原图
+                coroutineScope.launch {
+                    val mattedPath = onMatting(localPath)
+                    selectedImagePath = mattedPath ?: localPath  // 抠图失败使用原图
                     isMatting = false
                 }
             }
@@ -109,70 +92,59 @@ fun AddClothingScreen(
         categoryError = category == null
 
         if (name.isNotBlank() && category != null) {
-            // 优先使用抠图后的图片，没有则用原图，都没有则为空
-            val finalImage = mattedImagePath ?: selectedImagePath ?: ""
+            val finalImage = selectedImagePath ?: ""
             onSave(name, category!!, color, finalImage)
-            scope.launch { sheetState.hide() }
         }
     }
 
-    ModalBottomSheet(
+    Dialog(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = MaterialTheme.colorScheme.surface
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.92f)
+                .background(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(24.dp)
+                )
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 16.dp)
-                .navigationBarsPadding()
-                .imePadding()
+                .padding(top = 20.dp, bottom = 16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Text(
                 text = stringResource(R.string.add_clothing_title),
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth()
             )
 
             // ==================== 图片选择区域 ====================
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(16.dp))
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                     .clickable { galleryLauncher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
                 if (isMatting) {
-                    // 抠图中
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(40.dp),
-                            strokeWidth = 4.dp,
+                            strokeWidth = 3.dp,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stringResource(R.string.add_clothing_matting),
+                            text = "AI抠图中...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                } else if (mattedImagePath != null) {
-                    // 已抠图 → 显示抠图结果
-                    AsyncImage(
-                        model = mattedImagePath,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxWidth(),
-                        contentScale = ContentScale.Fit
-                    )
                 } else if (selectedImagePath != null) {
-                    // 原图（抠图失败或尚未抠图）
                     AsyncImage(
                         model = selectedImagePath,
                         contentDescription = null,
@@ -180,7 +152,6 @@ fun AddClothingScreen(
                         contentScale = ContentScale.Fit
                     )
                 } else {
-                    // 空状态
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Filled.CameraAlt,
@@ -269,8 +240,8 @@ fun AddClothingScreen(
                     shape = RoundedCornerShape(14.dp),
                     contentPadding = PaddingValues(vertical = 12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.height(18.dp))

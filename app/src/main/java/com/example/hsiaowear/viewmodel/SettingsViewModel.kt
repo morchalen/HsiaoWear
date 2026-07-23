@@ -143,6 +143,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // ==================== 火山方舟（抠图）设置 ====================
+
+    fun updateVolcengineAccessKey(accessKey: String) {
+        viewModelScope.launch {
+            settingsDataStore.updateVolcengineAccessKey(accessKey)
+        }
+    }
+
+    fun updateVolcengineSecretKey(secretKey: String) {
+        viewModelScope.launch {
+            settingsDataStore.updateVolcengineSecretKey(secretKey)
+        }
+    }
+
     fun testApiConnection(baseUrl: String, apiKey: String) {
         viewModelScope.launch {
             _isTesting.value = true

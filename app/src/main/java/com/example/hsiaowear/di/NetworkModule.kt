@@ -2,9 +2,10 @@ package com.example.hsiaowear.di
 
 import com.example.hsiaowear.network.ApiProviderRegistry
 import com.example.hsiaowear.network.DynamicBaseUrlInterceptor
-import com.example.hsiaowear.network.MeituApi
-import com.example.hsiaowear.network.MeituInterceptor
 import com.example.hsiaowear.network.TryOnApi
+import com.example.hsiaowear.network.VolcengineApi
+import com.example.hsiaowear.network.VolcengineCredentialsProvider
+import com.example.hsiaowear.network.VolcengineInterceptor
 import com.example.hsiaowear.network.WardrobeApi
 import dagger.Module
 import dagger.Provides
@@ -21,7 +22,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // ==================== 原有的 API 客户端 ====================
+    // ==================== 原有的 API 客户端（动态 Base URL） ====================
 
     @Provides
     @Singleton
@@ -58,19 +59,22 @@ object NetworkModule {
         return retrofit.create(WardrobeApi::class.java)
     }
 
-    // ==================== 美图开放平台抠图 API 客户端 ====================
+    // ==================== 火山引擎通用图像分割 API 客户端 ====================
 
     @Provides
     @Singleton
-    @MeituOkHttpClient
-    fun provideMeituOkHttpClient(): OkHttpClient {
+    @VolcengineOkHttpClient
+    fun provideVolcengineOkHttpClient(
+        credentialsProvider: VolcengineCredentialsProvider
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
         return OkHttpClient.Builder()
-            .addInterceptor(MeituInterceptor(
-                accessKey = "63f447c4d33f4391b4be097d6fcea323",
-                secretKey = "8e4c09bfc53a44febd97e639562f4514"
+            .addInterceptor(VolcengineInterceptor(
+                credentialsProvider = credentialsProvider,
+                region = "cn-north-1",
+                service = "cv"
             ))
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -81,19 +85,23 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @MeituRetrofit
-    fun provideMeituRetrofit(@MeituOkHttpClient meituOkHttpClient: OkHttpClient): Retrofit {
+    @VolcengineRetrofit
+    fun provideVolcengineRetrofit(
+        @VolcengineOkHttpClient volcengineOkHttpClient: OkHttpClient
+    ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://openapi.meitu.com/")
-            .client(meituOkHttpClient)
+            .baseUrl("https://visual.volcengineapi.com/")
+            .client(volcengineOkHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideMeituApi(@MeituRetrofit meituRetrofit: Retrofit): MeituApi {
-        return meituRetrofit.create(MeituApi::class.java)
+    fun provideVolcengineApi(
+        @VolcengineRetrofit volcengineRetrofit: Retrofit
+    ): VolcengineApi {
+        return volcengineRetrofit.create(VolcengineApi::class.java)
     }
 
     // ==================== DashScope（AI 试衣）API 客户端 ====================

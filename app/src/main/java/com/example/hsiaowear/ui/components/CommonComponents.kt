@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import com.example.hsiaowear.ui.theme.LocalAppShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -37,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 val clothingCategories = listOf(
-    "上衣", "下装", "外套", "连衣裙", "配饰", "鞋"
+    "上装", "下装", "鞋"
 )
 
 val colorOptions = listOf(
@@ -62,6 +63,7 @@ fun CategoryChips(
     showAll: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    val shapes = LocalAppShape.current
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -80,7 +82,8 @@ fun CategoryChips(
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                     selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                shape = RoundedCornerShape(999.dp)
+                shape = shapes.pill,
+                interactionSource = remember { MutableInteractionSource() }
             )
         }
         categories.forEach { category ->
@@ -96,7 +99,8 @@ fun CategoryChips(
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                     selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                shape = RoundedCornerShape(999.dp)
+                shape = shapes.pill,
+                interactionSource = remember { MutableInteractionSource() }
             )
         }
     }
@@ -173,6 +177,7 @@ fun SettingsGroup(
     title: String? = null,
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
 ) {
+    val shapes = LocalAppShape.current
     androidx.compose.foundation.layout.Column(
         verticalArrangement = Arrangement.spacedBy(0.dp),
         modifier = Modifier.fillMaxWidth()
@@ -183,15 +188,15 @@ fun SettingsGroup(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
             )
         }
         androidx.compose.foundation.layout.Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(14.dp)
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                    shape = shapes.button
                 )
                 .padding(horizontal = 16.dp)
         ) {
@@ -217,12 +222,19 @@ fun SettingsRow(
     modifier: Modifier = Modifier,
     content: (@Composable () -> Unit)? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null) Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    onClick = onClick
+                ) else Modifier
+            )
     ) {
         Text(
             text = label,

@@ -89,7 +89,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, paddingValues: androidx.compose
     ) {
         Spacer(modifier = Modifier.height(4.dp))
 
-        SettingsGroup(title = stringResource(R.string.settings_ai_provider)) {
+        SettingsGroup(title = "通用文字对话设置") {
             Spacer(modifier = Modifier.height(4.dp))
             OutlinedTextField(
                 value = apiSettings.apiKey,
@@ -174,22 +174,22 @@ fun SettingsScreen(viewModel: SettingsViewModel, paddingValues: androidx.compose
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = apiSettings.systemPrompt,
-                onValueChange = { viewModel.updateSystemPrompt(it) },
-                label = { Text(stringResource(R.string.settings_system_prompt), style = MaterialTheme.typography.bodyMedium) },
-                minLines = 2,
-                modifier = Modifier.fillMaxWidth(),
-                shape = shapes.input,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                ),
-                textStyle = MaterialTheme.typography.bodyLarge
-            )
+            // Spacer(modifier = Modifier.height(12.dp))
+            // OutlinedTextField(
+            //     value = apiSettings.systemPrompt,
+            //     onValueChange = { viewModel.updateSystemPrompt(it) },
+            //     label = { Text(stringResource(R.string.settings_system_prompt), style = MaterialTheme.typography.bodyMedium) },
+            //     minLines = 2,
+            //     modifier = Modifier.fillMaxWidth(),
+            //     shape = shapes.input,
+            //     colors = OutlinedTextFieldDefaults.colors(
+            //         focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            //         unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            //         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            //         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+            //     ),
+            //     textStyle = MaterialTheme.typography.bodyLarge
+            // )
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -222,7 +222,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, paddingValues: androidx.compose
             }
         }
 
-        SettingsGroup(title = "AI 试衣设置") {
+        SettingsGroup(title = "阿里云换衣设置") {
             Spacer(modifier = Modifier.height(4.dp))
             OutlinedTextField(
                 value = viewModel.tryOnSettings.collectAsState().value.apiKey,
@@ -253,6 +253,39 @@ fun SettingsScreen(viewModel: SettingsViewModel, paddingValues: androidx.compose
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                 ),
                 textStyle = MaterialTheme.typography.bodyLarge
+            )
+        }
+
+        SettingsGroup(title = "火山方舟抠图设置") {
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedTextField(
+                value = apiSettings.volcEngineAccessKey,
+                onValueChange = { viewModel.updateVolcengineAccessKey(it) },
+                label = { Text("Access Key ID", style = MaterialTheme.typography.bodyMedium) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = shapes.input,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                ),
+                textStyle = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = apiSettings.volcEngineSecretKey,
+                onValueChange = { viewModel.updateVolcengineSecretKey(it) },
+                label = { Text("Secret Access Key", style = MaterialTheme.typography.bodyMedium) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = shapes.input,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                ),
+                textStyle = MaterialTheme.typography.bodyMedium
             )
         }
 

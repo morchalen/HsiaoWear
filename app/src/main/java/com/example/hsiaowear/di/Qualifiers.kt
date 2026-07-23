@@ -4,11 +4,11 @@ import javax.inject.Qualifier
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class MeituOkHttpClient
+annotation class VolcengineOkHttpClient
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class MeituRetrofit
+annotation class VolcengineRetrofit
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
