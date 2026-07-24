@@ -4,7 +4,7 @@ import com.example.hsiaowear.data.SettingsDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,13 +26,7 @@ class VolcengineCredentialsProvider @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        // 启动时加载一次
-        scope.launch {
-            val settings = settingsDataStore.apiSettingsFlow.first()
-            cachedAk = settings.volcEngineAccessKey
-            cachedSk = settings.volcEngineSecretKey
-        }
-        // 监听后续变化
+        // 监听 DataStore 变化并缓存到内存
         scope.launch {
             settingsDataStore.apiSettingsFlow.collect { settings ->
                 cachedAk = settings.volcEngineAccessKey

@@ -37,6 +37,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/** 根据颜色名称获取 Color 值 */
+fun getColorByName(colorName: String): Color {
+    return colorOptions.firstOrNull { it.first == colorName }?.second ?: Color.Gray
+}
+
 val clothingCategories = listOf(
     "上装", "下装", "鞋"
 )

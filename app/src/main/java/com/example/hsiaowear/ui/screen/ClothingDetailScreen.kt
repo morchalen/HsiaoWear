@@ -43,13 +43,12 @@ import com.example.hsiaowear.R
 import com.example.hsiaowear.data.local.ClothingEntity
 import com.example.hsiaowear.ui.components.CategoryChips
 import com.example.hsiaowear.ui.components.ColorPicker
-import com.example.hsiaowear.ui.components.colorOptions
+import com.example.hsiaowear.ui.components.getColorByName
 
 @Composable
 fun ClothingDetailScreen(
     clothing: ClothingEntity,
     onBack: () -> Unit,
-    onEdit: () -> Unit,
     onDelete: () -> Unit,
     onUpdate: (ClothingEntity) -> Unit
 ) {
@@ -172,14 +171,8 @@ fun ClothingDetailScreen(
                             modifier = Modifier
                                 .size(14.dp)
                                 .background(
-                                    color = getColorByName(clothing.color),
+                                    color = if (clothing.color == "白色") Color.LightGray else getColorByName(clothing.color),
                                     shape = RoundedCornerShape(50)
-                                )
-                                .then(
-                                    if (clothing.color == "白色") Modifier.background(
-                                        color = Color.LightGray,
-                                        shape = RoundedCornerShape(50)
-                                    ) else Modifier
                                 )
                         )
                         Text(
@@ -234,8 +227,4 @@ fun ClothingDetailScreen(
             }
         }
     }
-}
-
-private fun getColorByName(colorName: String): Color {
-    return colorOptions.firstOrNull { it.first == colorName }?.second ?: Color.Gray
 }

@@ -829,9 +829,9 @@ private fun RecommendationReasonCard(reason: String?) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = reason ?: stringResource(R.string.today_reason_placeholder),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = reason ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

@@ -85,13 +85,7 @@ dependencies {
     // Coil Image Loading
     implementation(libs.coil.compose)
 
-// Volcengine Java SDK (only used for signing)
-    implementation(libs.volcengine.sdk.core)
-
-    // Material Icons Extended
-    implementation(libs.androidx.compose.material.icons.extended)
-
-    // Testing
+// Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

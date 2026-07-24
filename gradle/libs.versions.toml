@@ -31,14 +31,9 @@ retrofit = "2.11.0"
 # Coil
 coil = "2.5.0"
 
-# Volcengine SDK
-volcengine-sdk-core = "2.0.19"
-
 # Splash Screen
 coreSplashscreen = "1.0.1"
 
-# Shizuku
-shizuku = "13.1.5"
 animationCore = "1.11.4"
 
 [libraries]
@@ -85,13 +80,6 @@ converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", ve
 
 # Coil
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
-
-# Volcengine
-volcengine-sdk-core = { group = "com.volcengine", name = "volcengine-java-sdk-core", version.ref = "volcengine-sdk-core" }
-
-# Shizuku
-shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
-shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

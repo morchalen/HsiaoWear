@@ -23,5 +23,4 @@ class ApiProviderRegistry @Inject constructor() {
         this.apiKey = key.trim()
     }
 
-    fun isConfigured(): Boolean = baseUrl.isNotBlank() && apiKey.isNotBlank()
 }

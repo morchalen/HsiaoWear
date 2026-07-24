@@ -105,7 +105,8 @@ class TodayViewModel @Inject constructor(
 
     /** 加载持久化的抠图 Body 图片 */
     private fun loadPersistedBodyImage() {
-        viewModelScope.launch {
+        viewModelScope.launch {//标准的内部定义好的vm层协程写法，在可以被挂起的内容外面包裹一个作用域
+            //下面这个是耗时操作：从DataStore文件里面获取标签为mattedBodyImagePathFlow的第一个值，如果还没有值则等待直到有值
             val path = settingsDataStore.mattedBodyImagePathFlow.first()
             if (path.isNotBlank()) {
                 Log.d(TAG, "loadPersistedBodyImage: 加载持久化抠图图片 $path")
@@ -449,23 +450,7 @@ class TodayViewModel @Inject constructor(
         }
     }
 
-    fun getClothingById(id: Long): ClothingRecommendationItem? {
-        var result: ClothingRecommendationItem? = null
-        viewModelScope.launch {
-            clothingRepository.getClothingById(id)?.let {
-                result = ClothingRecommendationItem(
-                    id = it.id,
-                    name = it.name,
-                    category = it.category,
-                    color = it.color,
-                    imageUrl = it.imageUrl
-                )
-            }
-        }
-        return result
-    }
-
-    suspend fun getClothingByIdSuspend(id: Long): ClothingRecommendationItem? {
+    suspend fun getClothingById(id: Long): ClothingRecommendationItem? {
         return clothingRepository.getClothingById(id)?.let {
             ClothingRecommendationItem(
                 id = it.id,

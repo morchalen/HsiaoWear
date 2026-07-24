@@ -1,6 +1,5 @@
 package com.example.hsiaowear.data.repository
 
-import android.content.Context
 import com.example.hsiaowear.data.ApiSettings
 import com.example.hsiaowear.data.Result
 import com.example.hsiaowear.data.SettingsDataStore
@@ -9,14 +8,8 @@ import com.example.hsiaowear.network.LLMMessage
 import com.example.hsiaowear.network.LLMRequest
 import com.example.hsiaowear.network.LLMResponse
 import com.example.hsiaowear.network.OutfitRecommendation
-import com.example.hsiaowear.network.ToolCall
-import com.example.hsiaowear.network.ToolCallFunction
 import com.example.hsiaowear.network.ToolDefinition
-import com.example.hsiaowear.network.ToolFunction
-import com.example.hsiaowear.network.ToolParameters
-import com.example.hsiaowear.network.ToolProperty
 import com.example.hsiaowear.network.WeatherInfo
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
@@ -32,13 +25,11 @@ import java.net.URL
 import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.DayOfWeek
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AIRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val settingsDataStore: SettingsDataStore
 ) {
     companion object {

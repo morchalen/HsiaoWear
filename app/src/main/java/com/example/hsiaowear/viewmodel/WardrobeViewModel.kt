@@ -12,7 +12,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -43,24 +42,10 @@ class WardrobeViewModel @Inject constructor(
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
-        viewModelScope.launch {
-            if (query.isBlank()) {
-                repository.getAllClothes().collect { _clothes.value = it }
-            } else {
-                repository.searchClothes(query).collect { _clothes.value = it }
-            }
-        }
     }
 
     fun setCategory(category: String?) {
         _selectedCategory.value = category
-        viewModelScope.launch {
-            if (category.isNullOrBlank()) {
-                repository.getAllClothes().collect { _clothes.value = it }
-            } else {
-                repository.getClothesByCategory(category).collect { _clothes.value = it }
-            }
-        }
     }
 
     fun addClothing(name: String, category: String, color: String, imageUrl: String, aiData: String = "{}") {

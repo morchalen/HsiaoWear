@@ -163,7 +163,6 @@ fun MainContent() {
                     ClothingDetailScreen(
                         clothing = selectedClothing!!,
                         onBack = { selectedClothing = null },
-                        onEdit = { },
                         onDelete = {
                             wardrobeViewModel.deleteClothing(selectedClothing!!.id)
                             selectedClothing = null

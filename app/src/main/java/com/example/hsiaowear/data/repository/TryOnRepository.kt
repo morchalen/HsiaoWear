@@ -53,12 +53,12 @@ class TryOnRepository @Inject constructor(
      * 根据用户配置的 host 动态创建 TryOnApi 实例。
      */
     private fun getOrCreateTryOnApi(host: String): TryOnApi {
+        tryOnApi?.let { return it }
+
         // 自动补充 https:// 协议前缀
         val schemeHost = if (host.startsWith("http://") || host.startsWith("https://")) host else "https://$host"
         val cleanHost = if (schemeHost.endsWith("/")) schemeHost else "$schemeHost/"
         val baseUrl = "${cleanHost}api/v1/"
-
-        if (tryOnApi != null) return tryOnApi!!
 
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
@@ -76,7 +76,7 @@ class TryOnRepository @Inject constructor(
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        return retrofit.create(TryOnApi::class.java)
+        return retrofit.create(TryOnApi::class.java).also { tryOnApi = it }
     }
 
     /**
