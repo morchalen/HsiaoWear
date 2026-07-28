@@ -1,6 +1,7 @@
 package com.example.hsiaowear.ui.screen
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -8,23 +9,27 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.DevicesOther
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -51,11 +56,14 @@ import com.example.hsiaowear.ui.components.CategoryChips
 import com.example.hsiaowear.ui.components.ColorPicker
 import com.example.hsiaowear.util.ImageUtils
 
+private const val TAG = "HsiaoWear-AddClothing"
+
 @Composable
 fun AddClothingScreen(
     onSave: (name: String, category: String, color: String, imageUrl: String) -> Unit,
     onDismiss: () -> Unit,
-    onMatting: suspend (imagePath: String) -> String?
+    onCloudMatting: suspend (imagePath: String) -> String?,
+    onLocalMatting: suspend (imagePath: String) -> String?
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -69,19 +77,20 @@ fun AddClothingScreen(
     // 图片相关状态
     var selectedImagePath by remember { mutableStateOf<String?>(null) }
     var isMatting by remember { mutableStateOf(false) }
+    var mattingType by remember { mutableStateOf<String?>(null) } // "cloud" or "local"
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
+            Log.d(TAG, "用户选择了图片: $uri")
             val localPath = ImageUtils.copyImageToPrivateDir(context, it)
             if (localPath != null) {
-                isMatting = true
-                coroutineScope.launch {
-                    val mattedPath = onMatting(localPath)
-                    selectedImagePath = mattedPath ?: localPath  // 抠图失败使用原图
-                    isMatting = false
-                }
+                Log.d(TAG, "图片已复制到私有目录: $localPath")
+                selectedImagePath = localPath
+                // 不再自动抠图，等用户点击按钮
+            } else {
+                Log.w(TAG, "图片复制到私有目录失败")
             }
         }
     }
@@ -92,6 +101,7 @@ fun AddClothingScreen(
 
         if (name.isNotBlank() && category != null) {
             val finalImage = selectedImagePath ?: ""
+            Log.d(TAG, "保存衣物: name=$name, category=$category, color=$color, imageUrl=$finalImage")
             onSave(name, category!!, color, finalImage)
         }
     }
@@ -130,6 +140,7 @@ fun AddClothingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (isMatting) {
+                    // 抠图加载中
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(40.dp),
@@ -138,12 +149,13 @@ fun AddClothingScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "AI抠图中...",
+                            text = if (mattingType == "cloud") "网络抠图中..." else "本地抠图中...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                 } else if (selectedImagePath != null) {
+                    // 显示已选择的图片
                     AsyncImage(
                         model = selectedImagePath,
                         contentDescription = null,
@@ -151,6 +163,7 @@ fun AddClothingScreen(
                         contentScale = ContentScale.Fit
                     )
                 } else {
+                    // 未选择图片
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Filled.CameraAlt,
@@ -164,6 +177,78 @@ fun AddClothingScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                }
+            }
+
+            // ==================== 抠图按钮区域（选择图片后显示）====================
+            if (selectedImagePath != null && !isMatting) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // 网络抠图按钮
+                    OutlinedButton(
+                        onClick = {
+                            Log.d(TAG, "用户点击网络抠图: $selectedImagePath")
+                            isMatting = true
+                            mattingType = "cloud"
+                            coroutineScope.launch {
+                                val mattedPath = onCloudMatting(selectedImagePath!!)
+                                if (mattedPath != null) {
+                                    Log.d(TAG, "网络抠图成功: $mattedPath")
+                                    selectedImagePath = mattedPath
+                                } else {
+                                    Log.w(TAG, "网络抠图失败，保留原图")
+                                }
+                                isMatting = false
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.Cloud,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("网络抠图", fontWeight = FontWeight.Medium)
+                    }
+
+                    // 本地抠图按钮
+                    Button(
+                        onClick = {
+                            Log.d(TAG, "用户点击本地离线抠图: $selectedImagePath")
+                            isMatting = true
+                            mattingType = "local"
+                            coroutineScope.launch {
+                                val mattedPath = onLocalMatting(selectedImagePath!!)
+                                if (mattedPath != null) {
+                                    Log.d(TAG, "本地抠图成功: $mattedPath")
+                                    selectedImagePath = mattedPath
+                                } else {
+                                    Log.w(TAG, "本地抠图失败，保留原图")
+                                }
+                                isMatting = false
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.DevicesOther,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("本地抠图", fontWeight = FontWeight.Medium)
                     }
                 }
             }

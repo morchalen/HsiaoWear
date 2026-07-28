@@ -1,6 +1,6 @@
 package com.example.hsiaowear.data
 
-sealed class Result<out T> {
+sealed class Result<out T> {// 通用结果类，用于表示异步操作的结果
     data class Success<out T>(val data: T) : Result<T>()
     data class Error(val exception: Exception, val message: String? = null) : Result<Nothing>()
     object Loading : Result<Nothing>()

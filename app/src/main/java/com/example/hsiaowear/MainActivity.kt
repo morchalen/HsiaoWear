@@ -155,7 +155,8 @@ fun MainContent() {
                             showAddClothing = false
                         },
                         onDismiss = { showAddClothing = false },
-                        onMatting = { wardrobeViewModel.processClothingImage(it) }
+                        onCloudMatting = { wardrobeViewModel.processClothingImageOnline(it) },
+                        onLocalMatting = { wardrobeViewModel.processClothingImageLocal(it) }
                     )
                 }
 

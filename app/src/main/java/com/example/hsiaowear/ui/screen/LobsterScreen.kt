@@ -1,7 +1,12 @@
 package com.example.hsiaowear.ui.screen
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,35 +27,93 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.hsiaowear.R
 import com.example.hsiaowear.ui.components.EmptyState
+import com.example.hsiaowear.util.rememberTtsManager
+import com.example.hsiaowear.util.VoskSpeechHelper
 import com.example.hsiaowear.viewmodel.ChatMessage
 import com.example.hsiaowear.viewmodel.LobsterViewModel
 
 @Composable
 fun LobsterScreen(viewModel: LobsterViewModel, paddingValues: PaddingValues) {
+    val context = LocalContext.current
     val messages by viewModel.messages.collectAsState()
     val isTyping by viewModel.isTyping.collectAsState()
     val listState = rememberLazyListState()
     var inputText by remember { mutableStateOf("") }
+    val ttsManager = rememberTtsManager()
+    var speakingMessageId by remember { mutableStateOf<Long?>(null) }
+
+    // Vosk 语音识别
+    val voskHelper = remember { VoskSpeechHelper(context) }
+    val scope = rememberCoroutineScope()
+    var isVoiceRecording by remember { mutableStateOf(false) }
+
+    // 录音权限请求
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            voskHelper.initialize(scope)
+            voskHelper.startRecording(scope)
+            isVoiceRecording = true
+        }
+    }
+
+    // 初始化 Vosk 模型（后台下载）
+    LaunchedEffect(Unit) {
+        voskHelper.initialize(scope)
+    }
+
+    // 监听 Vosk 结果和状态
+    DisposableEffect(Unit) {
+        voskHelper.onResult = { text ->
+            if (text.isNotBlank()) {
+                viewModel.sendMessage(text)
+            }
+        }
+        onDispose {
+            voskHelper.onResult = null
+            voskHelper.onStateChanged = null
+            voskHelper.release()
+        }
+    }
+
+    // 监听朗读状态，朗读结束时清除 speakingMessageId
+    DisposableEffect(Unit) {
+        ttsManager.onSpeakingStateChanged = { isSpeaking ->
+            if (!isSpeaking) {
+                speakingMessageId = null
+            }
+        }
+        onDispose {
+            ttsManager.onSpeakingStateChanged = null
+        }
+    }
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -69,7 +132,20 @@ fun LobsterScreen(viewModel: LobsterViewModel, paddingValues: PaddingValues) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(messages, key = { it.id }) { message ->
-                    ChatBubble(message = message)
+                    ChatBubble(
+                        message = message,
+                        isSpeaking = speakingMessageId == message.id,
+                        onSpeakToggle = {
+                            if (speakingMessageId == message.id) {
+                                ttsManager.stop()
+                                speakingMessageId = null
+                            } else {
+                                ttsManager.stop()
+                                ttsManager.speak(message.text)
+                                speakingMessageId = message.id
+                            }
+                        }
+                    )
                 }
                 if (isTyping) {
                     item {
@@ -107,13 +183,34 @@ fun LobsterScreen(viewModel: LobsterViewModel, paddingValues: PaddingValues) {
                     inputText = ""
                 }
             },
-            isLoading = isTyping
+            isLoading = isTyping,
+            isVoiceRecording = isVoiceRecording,
+            onVoiceStart = {
+                if (voskHelper.isModelReady) {
+                    if (voskHelper.hasPermission()) {
+                        voskHelper.startRecording(scope)
+                        isVoiceRecording = true
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                }
+            },
+            onVoiceEnd = {
+                if (isVoiceRecording) {
+                    voskHelper.stopRecording()
+                    isVoiceRecording = false
+                }
+            }
         )
     }
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage) {
+private fun ChatBubble(
+    message: ChatMessage,
+    isSpeaking: Boolean = false,
+    onSpeakToggle: () -> Unit = {}
+) {
     val isUser = message.isUser
 
     Row(
@@ -138,11 +235,52 @@ private fun ChatBubble(message: ChatMessage) {
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .animateContentSize()
         ) {
-            Text(
-                text = message.text,
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            )
+            if (isUser) {
+                // 用户消息：只显示文本
+                Text(
+                    text = message.text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                // AI 消息：文本 + 朗读按钮
+                Column {
+                    Text(
+                        text = message.text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        IconButton(
+                            onClick = onSpeakToggle,
+                            modifier = Modifier.size(32.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = if (isSpeaking)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (isSpeaking)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Icon(
+                                imageVector = if (isSpeaking)
+                                    Icons.Default.VolumeUp
+                                else
+                                    Icons.Default.VolumeUp,
+                                contentDescription = if (isSpeaking) "停止朗读" else "朗读",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -186,8 +324,19 @@ private fun InputBar(
     inputText: String,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    isVoiceRecording: Boolean = false,
+    onVoiceStart: () -> Unit = {},
+    onVoiceEnd: () -> Unit = {}
 ) {
+    val micTint by animateColorAsState(
+        targetValue = if (isVoiceRecording)
+            MaterialTheme.colorScheme.error
+        else
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        label = "micTint"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -211,7 +360,31 @@ private fun InputBar(
             textStyle = MaterialTheme.typography.bodyLarge,
             maxLines = 4
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(4.dp))
+        // Vosk 语音按钮（按住说话，松手自动发送）
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            onVoiceStart()
+                            try {
+                                awaitRelease()
+                            } catch (_: kotlinx.coroutines.CancellationException) { }
+                            onVoiceEnd()
+                        }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Mic,
+                contentDescription = "语音输入",
+                tint = micTint,
+                modifier = Modifier.size(22.dp)
+            )
+        }
         IconButton(
             onClick = onSend,
             enabled = inputText.isNotBlank() && !isLoading

@@ -94,18 +94,38 @@ class WardrobeViewModel @Inject constructor(
     }
 
     /**
-     * 对衣物图片进行抠图处理，返回抠图结果路径。
+     * 对衣物图片进行在线抠图（火山引擎 API），返回抠图结果路径。
      * 抠图失败时返回 null，由调用方决定是否使用原图。
      */
-    suspend fun processClothingImage(filePath: String): String? {
-        Log.d(TAG, "processClothingImage: 开始抠图 $filePath")
+    suspend fun processClothingImageOnline(filePath: String): String? {
+        Log.d(TAG, "processClothingImageOnline: 开始在线抠图 $filePath")
         return when (val result = mattingRepository.matting(filePath)) {
             is Result.Success -> {
-                Log.d(TAG, "processClothingImage: 抠图成功 ${result.data}")
+                Log.d(TAG, "processClothingImageOnline: 在线抠图成功 ${result.data}")
                 result.data
             }
             is Result.Error -> {
-                Log.w(TAG, "processClothingImage: 抠图失败 ${result.message}")
+                Log.w(TAG, "processClothingImageOnline: 在线抠图失败 ${result.message}")
+                null
+            }
+            Result.Loading -> null
+        }
+    }
+
+    /**
+     * 对衣物图片进行本地离线抠图（TFLite），返回抠图结果路径。
+     * 首次使用会自动下载模型（约 200KB），之后完全离线。
+     * 抠图失败时返回 null，由调用方决定是否使用原图。
+     */
+    suspend fun processClothingImageLocal(filePath: String): String? {
+        Log.d(TAG, "processClothingImageLocal: 开始本地离线抠图 $filePath")
+        return when (val result = mattingRepository.mattingLocal(filePath)) {
+            is Result.Success -> {
+                Log.d(TAG, "processClothingImageLocal: 本地抠图成功 ${result.data}")
+                result.data
+            }
+            is Result.Error -> {
+                Log.w(TAG, "processClothingImageLocal: 本地抠图失败 ${result.message}")
                 null
             }
             Result.Loading -> null

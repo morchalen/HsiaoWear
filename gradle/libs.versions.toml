@@ -36,6 +36,13 @@ coreSplashscreen = "1.0.1"
 
 animationCore = "1.11.4"
 
+# TFLite / ML Kit
+tensorflowlite = "2.16.1"
+mlkitSegmentationSelfie = "16.0.0-beta4"
+
+# Vosk
+vosk = "0.3.38"
+
 [libraries]
 # AndroidX
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -86,6 +93,13 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
+
+# TFLite / ML Kit
+tensorflow-lite = { group = "org.tensorflow", name = "tensorflow-lite", version.ref = "tensorflowlite" }
+mlkit-segmentation-selfie = { group = "com.google.mlkit", name = "segmentation-selfie", version.ref = "mlkitSegmentationSelfie" }
+
+# Vosk
+vosk-android = { group = "com.alphacephei", name = "vosk-android", version.ref = "vosk" }
 
 [plugins]
 

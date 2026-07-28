@@ -85,6 +85,14 @@ dependencies {
     // Coil Image Loading
     implementation(libs.coil.compose)
 
+    // TFLite / ML Kit
+    implementation(libs.tensorflow.lite)
+    implementation(libs.mlkit.segmentation.selfie)
+
+    // Vosk
+    implementation(libs.vosk.android)
+    implementation("net.java.dev.jna:jna:5.14.0@aar")
+
 // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
