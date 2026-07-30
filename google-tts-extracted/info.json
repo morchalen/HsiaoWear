@@ -1,0 +1,57 @@
+{
+    "apkm_version": 5,
+    "apk_title": "Speech Recognition &amp; Synthesis googletts.google-speech-apk_20250414.00_p1.751560082 (arm64-v8a) (120-640dpi) (Android 8.0+)",
+    "app_name": "Speech Recognition &amp; Synthesis",
+    "release_version": "googletts.google-speech-apk_20250414.00_p1.751560082",
+    "variant": "(arm64-v8a) (120-640dpi) (Android 8.0+)",
+    "release_title": "Speech Recognition &amp; Synthesis googletts.google-speech-apk_20250414.00_p1.751560082 (arm64-v8a) (120-640dpi) (Android 8.0+)",
+    "versioncode": "210556534",
+    "pname": "com.google.android.tts",
+    "post_date": "2025-04-29 23:46:05",
+    "capabilities": [
+        "leanback"
+    ],
+    "languages": [
+        "ar",
+        "de",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hi",
+        "hu",
+        "in",
+        "it",
+        "iw",
+        "ja",
+        "ko",
+        "ms",
+        "nl",
+        "pl",
+        "pt",
+        "ru",
+        "sr",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "vi",
+        "zh"
+    ],
+    "arches": [
+        "arm64-v8a"
+    ],
+    "dpis": [
+        "120",
+        "160",
+        "240",
+        "320",
+        "480",
+        "640"
+    ],
+    "min_api": "26",
+    "accent_color": "4c8cf4",
+    "apk_id": 9167301,
+    "release_id": 9167303
+}

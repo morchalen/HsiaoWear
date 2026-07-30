@@ -89,9 +89,12 @@ dependencies {
     implementation(libs.tensorflow.lite)
     implementation(libs.mlkit.segmentation.selfie)
 
-    // Vosk
-    implementation(libs.vosk.android)
-    implementation("net.java.dev.jna:jna:5.14.0@aar")
+    // Vosk (排除传递的 JNA 避免 class 冲突，原生 .so 通过 jniLibs 提供)
+    implementation(libs.vosk.android) {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+    // JNA Java 类（不含原生 .so）
+    implementation("net.java.dev.jna:jna:5.14.0")
 
 // Testing
     testImplementation(libs.junit)

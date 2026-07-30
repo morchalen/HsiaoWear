@@ -25,7 +25,7 @@ data class AppShape(
     val medium: Shape = RoundedCornerShape(12.dp),
     val large: Shape = RoundedCornerShape(16.dp),
     val extraLarge: Shape = RoundedCornerShape(20.dp),
-    val pill: Shape = RoundedCornerShape(999.dp),
+    val pill: Shape = RoundedCornerShape(50),
     val sheet: Shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     val card: Shape = RoundedCornerShape(16.dp),
     val button: Shape = RoundedCornerShape(12.dp),

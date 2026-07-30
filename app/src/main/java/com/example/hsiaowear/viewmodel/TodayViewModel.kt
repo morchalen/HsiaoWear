@@ -349,8 +349,8 @@ class TodayViewModel @Inject constructor(
     }
 
     /**
-     * 用户选择图片后调用：自动抠图，替换原图，持久保存。
-     * 上传新图时自动替换旧图片。
+     * 用户选择图片后调用：仅保存原图并持久化，不再自动抠图。
+     * 抠图由用户通过 UI 上的"网络抠图/本地抠图"按钮手动触发。
      */
     fun setBodyImageUrl(filePath: String?) {
         if (filePath.isNullOrBlank()) {
@@ -365,44 +365,13 @@ class TodayViewModel @Inject constructor(
         }
 
         Log.d(TAG, "setBodyImageUrl: 上传新图片 $filePath")
-        // 先显示原图
         _bodyImageUrl.value = filePath
         _isMatting.value = false
         savedOriginalBodyImage = null
 
-        // 自动触发抠图
+        // 不自动抠图，只持久化保存原图路径
         viewModelScope.launch {
-            _isMatting.value = true
-            _error.value = null
-
-            when (val result = mattingRepository.matting(filePath)) {
-                is Result.Success -> {
-                    val mattedPath = result.data
-                    Log.d(TAG, "自动抠图成功: $mattedPath")
-
-                    // 删除原图
-                    ImageUtils.deleteImageFile(filePath)
-
-                    // 删除旧的持久化图片（如果存在）
-                    val oldMattedPath = settingsDataStore.mattedBodyImagePathFlow.first()
-                    if (oldMattedPath.isNotBlank() && oldMattedPath != mattedPath) {
-                        ImageUtils.deleteImageFile(oldMattedPath)
-                    }
-
-                    // 替换显示为抠图结果
-                    _bodyImageUrl.value = mattedPath
-                    // 持久化保存
-                    settingsDataStore.saveMattedBodyImagePath(mattedPath)
-                }
-                is Result.Error -> {
-                    // 抠图失败不中断，继续显示原图
-                    Log.w(TAG, "自动抠图失败: ${result.message}")
-                    _error.value = "抠图失败，将使用原图"
-                }
-                Result.Loading -> {}
-            }
-
-            _isMatting.value = false
+            settingsDataStore.saveMattedBodyImagePath(filePath)
         }
     }
 
@@ -442,6 +411,41 @@ class TodayViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     _error.value = "抠图失败：${result.message}"
+                }
+                Result.Loading -> {}
+            }
+
+            _isMatting.value = false
+        }
+    }
+
+    /**
+     * 用户手动点击"本地抠图"时调用。
+     */
+    fun performLocalMatting() {
+        val path = _bodyImageUrl.value ?: return
+        if (path.isBlank()) return
+
+        viewModelScope.launch {
+            _isMatting.value = true
+            _error.value = null
+
+            when (val result = mattingRepository.mattingLocal(path)) {
+                is Result.Success -> {
+                    val mattedPath = result.data
+                    // 删除原图
+                    ImageUtils.deleteImageFile(path)
+                    // 替换显示
+                    _bodyImageUrl.value = mattedPath
+                    // 持久化
+                    val oldMattedPath = settingsDataStore.mattedBodyImagePathFlow.first()
+                    if (oldMattedPath.isNotBlank() && oldMattedPath != mattedPath) {
+                        ImageUtils.deleteImageFile(oldMattedPath)
+                    }
+                    settingsDataStore.saveMattedBodyImagePath(mattedPath)
+                }
+                is Result.Error -> {
+                    _error.value = "本地抠图失败：${result.message}"
                 }
                 Result.Loading -> {}
             }

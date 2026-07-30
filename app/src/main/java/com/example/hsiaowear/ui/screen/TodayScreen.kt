@@ -176,6 +176,7 @@ fun TodayScreen(viewModel: TodayViewModel, paddingValues: PaddingValues) {
                     },
                     onRestoreBodyImage = { viewModel.restoreBodyImage() },
                     onMatting = { viewModel.performMatting() },
+                    onLocalMatting = { viewModel.performLocalMatting() },
                     onUpperChanged = { upperClothing = it },
                     onLowerChanged = { lowerClothing = it },
                     onShoesChanged = { shoesClothing = it },
@@ -292,6 +293,7 @@ private fun OutfitRecommendationSection(
     onTryOn: (ClothingRecommendationItem?, ClothingRecommendationItem?, ClothingRecommendationItem?) -> Unit,
     onRestoreBodyImage: () -> Unit,
     onMatting: () -> Unit,
+    onLocalMatting: () -> Unit,
     onUpperChanged: (ClothingRecommendationItem?) -> Unit,
     onLowerChanged: (ClothingRecommendationItem?) -> Unit,
     onShoesChanged: (ClothingRecommendationItem?) -> Unit,
@@ -421,7 +423,8 @@ private fun OutfitRecommendationSection(
                         isShowingTryOnResult = isShowingTryOnResult,
                         onBodyImageUpdate = onBodyImageUpdate,
                         onRestore = onRestoreBodyImage,
-                        onMatting = onMatting
+                        onMatting = onMatting,
+                        onLocalMatting = onLocalMatting
                     )
 
                     // 衣物推荐列：三行平均分配高度
@@ -473,7 +476,8 @@ private fun BodyImageColumn(
     isShowingTryOnResult: Boolean = false,
     onBodyImageUpdate: (String?) -> Unit,
     onRestore: () -> Unit,
-    onMatting: () -> Unit
+    onMatting: () -> Unit,
+    onLocalMatting: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -559,13 +563,42 @@ private fun BodyImageColumn(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "自动抠图优化",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(105.dp)
-        )
+        // 有图且未在抠图中时，显示抠图按钮
+        if (!bodyImageUrl.isNullOrBlank() && !isMatting && !isShowingTryOnResult) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Button(
+                    onClick = onMatting,
+                    modifier = Modifier.width(105.dp),
+                    shape = LocalAppShape.current.pill,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        text = "网络抠图",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Button(
+                    onClick = onLocalMatting,
+                    modifier = Modifier.width(105.dp),
+                    shape = LocalAppShape.current.pill,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text(
+                        text = "本地抠图",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
 
         // 试衣结果恢复按钮
         if (isShowingTryOnResult) {
