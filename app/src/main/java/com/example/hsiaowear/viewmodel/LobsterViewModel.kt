@@ -47,7 +47,7 @@ class LobsterViewModel @Inject constructor(
     init {
         val welcomeMessage = ChatMessage(
             id = System.currentTimeMillis(),
-            text = """你好，我是小不衣橱的 AI 助手 🦞
+            text = """你好，我是 AI 助手
 
 我可以帮您：
 
@@ -82,7 +82,7 @@ class LobsterViewModel @Inject constructor(
 
         val tools = getWardrobeTools()
         val systemPrompt = """
-你现在是 SmartWardrobe 系统的核心智能中枢，代号"衣柜龙虾"（Lobster）🦞。
+你现在是 SmartWardrobe 系统的智能衣橱助手。
 
 ## 你的身份与性格
 - 你是用户的智能衣橱助手，性格克制、专业、高效
@@ -247,27 +247,29 @@ class LobsterViewModel @Inject constructor(
             else -> toolName
         }
 
-        var msg = "🦞 我理解到您的意图是【$nameCN】\n\n"
+        val sb = StringBuilder()
+        sb.append("正在$nameCN")
 
         if (argsJson.isNotBlank() && argsJson != "{}") {
-            msg += "提取到的信息：\n"
             try {
                 val gson = com.google.gson.Gson()
                 val args = gson.fromJson(argsJson, Map::class.java)
-                for ((key, value) in args) {
+                val details = args.map { (key, value) ->
                     val label = when (key) {
                         "category" -> "类别"
                         else -> key
                     }
-                    msg += "• $label：$value\n"
+                    "$label：$value"
+                }
+                if (details.isNotEmpty()) {
+                    sb.append("（${details.joinToString("，")}）")
                 }
             } catch (_: Exception) {
             }
-            msg += "\n"
         }
 
-        msg += "我将调用相应的功能为您执行，请稍候..."
-        return msg
+        sb.append("…")
+        return sb.toString()
     }
 
     private suspend fun executeTool(toolName: String, argsJson: String): String {

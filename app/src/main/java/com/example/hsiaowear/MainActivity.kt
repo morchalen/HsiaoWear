@@ -292,33 +292,7 @@ fun AdaptiveScreen(
             NavigationRail(
                 modifier = Modifier.fillMaxHeight(),
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                header = {
-                    Row(
-                        modifier = Modifier
-                            .padding(start = 24.dp, top = 32.dp, end = 24.dp, bottom = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "👗",
-                            fontSize = 28.sp
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "小不衣橱",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "AI 穿搭助手",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
                 navItems.forEach { item ->
                     NavigationRailItem(

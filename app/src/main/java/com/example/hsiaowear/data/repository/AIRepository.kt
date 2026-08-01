@@ -82,19 +82,34 @@ class AIRepository @Inject constructor(
             .create(LLMApi::class.java)
     }
 
-    suspend fun testConnection(): Result<Unit> {
-        val api = llmApi ?: return Result.Error(Exception("API 未配置"))
+    /**
+     * 测试连接：直接指定 baseUrl + apiKey + modelName，不依赖异步 flow。
+     * 如果测试成功还会同步更新内部的 llmApi 供后续使用。
+     */
+    suspend fun testConnection(baseUrl: String, apiKey: String, modelName: String): Result<Unit> {
+        if (baseUrl.isBlank()) return Result.Error(Exception("API Endpoint 为空"))
+        if (apiKey.isBlank()) return Result.Error(Exception("API Key 为空"))
+        if (modelName.isBlank()) return Result.Error(Exception("Model Name 为空"))
+
+        val tempApi = createLLMApi(ApiSettings(baseUrl = baseUrl, apiKey = apiKey, modelName = modelName))
+            ?: return Result.Error(Exception("无法创建 API 客户端"))
+
         return try {
             val request = LLMRequest(
-                model = apiSettings.modelName,
+                model = modelName,
                 messages = listOf(LLMMessage(role = "user", content = "hello")),
                 temperature = 0.0,
                 max_tokens = 1
             )
-            api.chatCompletions(request)
+            tempApi.chatCompletions(request)
+            // 测试成功 → 同步更新内部 llmApi，后续聊天可直接使用
+            synchronized(this) {
+                apiSettings = ApiSettings(baseUrl = baseUrl, apiKey = apiKey, modelName = modelName)
+                llmApi = tempApi
+            }
             Result.Success(Unit)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Error(e, e.message ?: "连接测试失败：${e.javaClass.simpleName}")
         }
     }
 
@@ -145,14 +160,18 @@ class AIRepository @Inject constructor(
                 ))
             } catch (e: Exception) {
                 android.util.Log.e("HsiaoWear-Weather", "获取天气失败", e)
-                Result.Error(e)
+                Result.Error(e, e.message ?: "请求失败：${e.javaClass.simpleName}")
             }
         }
     }
 
     suspend fun chatWithAI(messages: List<LLMMessage>, tools: List<ToolDefinition>? = null): Result<LLMResponse> {
-        val api = llmApi ?: return Result.Error(Exception("API 未配置"))
+        val api = llmApi ?: return Result.Error(
+            Exception("API 未配置"),
+            "API 未配置，请先在设置中填写 API Endpoint 和 API Key"
+        )
         return try {
+            android.util.Log.d(TAG, "chatWithAI: model=${apiSettings.modelName}, messages=${messages.size}")
             val request = LLMRequest(
                 model = apiSettings.modelName,
                 messages = messages,
@@ -163,7 +182,8 @@ class AIRepository @Inject constructor(
             val response = api.chatCompletions(request)
             Result.Success(response)
         } catch (e: Exception) {
-            Result.Error(e)
+            android.util.Log.e(TAG, "chatWithAI 失败", e)
+            Result.Error(e, e.message ?: "AI 请求异常：${e.javaClass.simpleName}")
         }
     }
 

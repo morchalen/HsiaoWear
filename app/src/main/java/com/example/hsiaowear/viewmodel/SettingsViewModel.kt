@@ -157,13 +157,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun testApiConnection(baseUrl: String, apiKey: String) {
+    fun testApiConnection(baseUrl: String, apiKey: String, modelName: String = "gpt-3.5-turbo") {
         viewModelScope.launch {
             _isTesting.value = true
             try {
                 apiProviderRegistry.setBaseUrl(baseUrl)
                 apiProviderRegistry.setApiKey(apiKey)
-                val result = aiRepository.testConnection()
+                val result = aiRepository.testConnection(baseUrl, apiKey, modelName)
                 _testResult.value = result is Result.Success
             } catch (e: Exception) {
                 _testResult.value = false

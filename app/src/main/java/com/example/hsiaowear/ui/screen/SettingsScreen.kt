@@ -197,7 +197,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, paddingValues: androidx.compose
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(
-                    onClick = { viewModel.testApiConnection(apiSettings.baseUrl, apiSettings.apiKey) },
+                    onClick = { viewModel.testApiConnection(apiSettings.baseUrl, apiSettings.apiKey, apiSettings.modelName) },
                     enabled = !isTesting && apiSettings.baseUrl.isNotBlank() && apiSettings.apiKey.isNotBlank()
                 ) {
                     if (isTesting) {

@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -66,9 +68,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.hsiaowear.R
 import com.example.hsiaowear.data.local.ClothingEntity
 import com.example.hsiaowear.data.repository.ClothingRecommendationItem
@@ -411,21 +415,26 @@ private fun OutfitRecommendationSection(
                 }
             } else {
                 // 固定高度 300dp，确保衣物行一定可见且平均分配
-                Row(
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .height(300.dp)
                 ) {
-                    BodyImageColumn(
-                        bodyImageUrl = bodyImageUrl,
-                        isMatting = isMatting,
-                        isShowingTryOnResult = isShowingTryOnResult,
-                        onBodyImageUpdate = onBodyImageUpdate,
-                        onRestore = onRestoreBodyImage,
-                        onMatting = onMatting,
-                        onLocalMatting = onLocalMatting
-                    )
+                    val modelImageMaxWidth = maxWidth * 0.5f
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        BodyImageColumn(
+                            bodyImageUrl = bodyImageUrl,
+                            isMatting = isMatting,
+                            isShowingTryOnResult = isShowingTryOnResult,
+                            maxImageWidth = modelImageMaxWidth,
+                            onBodyImageUpdate = onBodyImageUpdate,
+                            onRestore = onRestoreBodyImage,
+                            onMatting = onMatting,
+                            onLocalMatting = onLocalMatting
+                        )
 
                     // 衣物推荐列：三行平均分配高度
                     Column(
@@ -435,7 +444,6 @@ private fun OutfitRecommendationSection(
                         ClothingRow(
                             modifier = Modifier.weight(1f),
                             title = "上装",
-                            icon = "",
                             clothing = upperClothing,
                             onClick = { onUpperChanged(it) },
                             allClothes = allClothes.filter { c ->
@@ -445,7 +453,6 @@ private fun OutfitRecommendationSection(
                         ClothingRow(
                             modifier = Modifier.weight(1f),
                             title = "下装",
-                            icon = "",
                             clothing = lowerClothing,
                             onClick = { onLowerChanged(it) },
                             allClothes = allClothes.filter { c ->
@@ -455,13 +462,13 @@ private fun OutfitRecommendationSection(
                         ClothingRow(
                             modifier = Modifier.weight(1f),
                             title = "鞋子",
-                            icon = "",
                             clothing = shoesClothing,
                             onClick = { onShoesChanged(it) },
                             allClothes = allClothes.filter { c ->
                                 c.category == "鞋"
                             }
                         )
+                    }
                     }
                 }
             }
@@ -474,12 +481,15 @@ private fun BodyImageColumn(
     bodyImageUrl: String?,
     isMatting: Boolean = false,
     isShowingTryOnResult: Boolean = false,
+    maxImageWidth: Dp,
     onBodyImageUpdate: (String?) -> Unit,
     onRestore: () -> Unit,
     onMatting: () -> Unit,
     onLocalMatting: () -> Unit
 ) {
     val context = LocalContext.current
+    var pendingImagePath by remember { mutableStateOf<String?>(null) }
+    var showMattingDialog by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -487,9 +497,20 @@ private fun BodyImageColumn(
         uri?.let {
             val filePath = ImageUtils.copyImageToPrivateDir(context, it)
             if (filePath != null) {
-                onBodyImageUpdate(filePath)
+                // 新图不立即应用，先弹出抠图选择对话框（仅上传时这一次机会）
+                pendingImagePath = filePath
+                showMattingDialog = true
             }
         }
+    }
+
+    // 按照片实际宽高比以高度适配宽度；未加载完成时默认 3:4 竖版人像
+    val painter = rememberAsyncImagePainter(model = bodyImageUrl)
+    val intrinsicSize = painter.intrinsicSize
+    val imageAspectRatio = if (intrinsicSize.width > 0f && intrinsicSize.height > 0f) {
+        intrinsicSize.width / intrinsicSize.height
+    } else {
+        3f / 4f
     }
 
     Column(
@@ -499,8 +520,9 @@ private fun BodyImageColumn(
         // 整个模特图区域可点击上传
         Box(
             modifier = Modifier
-                .width(105.dp)
                 .weight(1f)
+                .aspectRatio(imageAspectRatio)
+                .widthIn(max = maxImageWidth)
                 .clip(LocalAppShape.current.button)
                 .background(MaterialTheme.colorScheme.surface)
                 .clickable { galleryLauncher.launch("image/*") },
@@ -561,45 +583,6 @@ private fun BodyImageColumn(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 有图且未在抠图中时，显示抠图按钮
-        if (!bodyImageUrl.isNullOrBlank() && !isMatting && !isShowingTryOnResult) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Button(
-                    onClick = onMatting,
-                    modifier = Modifier.width(105.dp),
-                    shape = LocalAppShape.current.pill,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text(
-                        text = "网络抠图",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Button(
-                    onClick = onLocalMatting,
-                    modifier = Modifier.width(105.dp),
-                    shape = LocalAppShape.current.pill,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Text(
-                        text = "本地抠图",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-
         // 试衣结果恢复按钮
         if (isShowingTryOnResult) {
             Spacer(modifier = Modifier.height(6.dp))
@@ -621,6 +604,92 @@ private fun BodyImageColumn(
             }
         }
     }
+
+    // 上传新图后弹出抠图选择对话框（仅上传时这一次机会）
+    if (showMattingDialog && pendingImagePath != null) {
+        val path = pendingImagePath!!
+        MattingChoiceDialog(
+            onLocalMatting = {
+                showMattingDialog = false
+                pendingImagePath = null
+                onBodyImageUpdate(path)
+                onLocalMatting()
+            },
+            onNetworkMatting = {
+                showMattingDialog = false
+                pendingImagePath = null
+                onBodyImageUpdate(path)
+                onMatting()
+            },
+            onSkip = {
+                showMattingDialog = false
+                pendingImagePath = null
+                onBodyImageUpdate(path)
+            },
+            onDismiss = {
+                showMattingDialog = false
+                pendingImagePath = null
+            }
+        )
+    }
+}
+
+/**
+ * 抠图选择对话框 - 用户上传新模特照片后弹出，提供本地/网络抠图或不抠图。
+ */
+@Composable
+private fun MattingChoiceDialog(
+    onLocalMatting: () -> Unit,
+    onNetworkMatting: () -> Unit,
+    onSkip: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "处理照片",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "抠图可去除背景，让 AI 试衣效果更好。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                DialogChoiceButton(text = "本地抠图（离线，速度快）", onClick = onLocalMatting)
+                DialogChoiceButton(text = "网络抠图（效果更精细）", onClick = onNetworkMatting)
+                DialogChoiceButton(text = "不抠图", onClick = onSkip)
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "取消")
+            }
+        },
+        shape = LocalAppShape.current.large
+    )
+}
+
+@Composable
+private fun DialogChoiceButton(text: String, onClick: () -> Unit) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = LocalAppShape.current.medium,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
 
 /**
@@ -630,7 +699,6 @@ private fun BodyImageColumn(
 private fun ClothingRow(
     modifier: Modifier = Modifier,
     title: String,
-    icon: String,
     clothing: ClothingRecommendationItem?,
     onClick: (ClothingRecommendationItem?) -> Unit,
     allClothes: List<ClothingEntity>
@@ -658,27 +726,28 @@ private fun ClothingRow(
     ) {
         Row(
             modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text(text = icon, fontSize = 16.sp)
-
+            // 衣物图片：撑满整行高度，作为行的视觉主体（无背景色）
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .fillMaxHeight()
+                    .width(64.dp)
+                    .clip(shapes.small),
                 contentAlignment = Alignment.Center
             ) {
                 if (clothing?.imageUrl.isNullOrBlank()) {
-                    Text(text = "👔", fontSize = 18.sp)
+                    Text(text = "👔", fontSize = 24.sp)
                 } else {
                     AsyncImage(
                         model = clothing?.imageUrl,
                         contentDescription = clothing?.name,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
                 }
             }
@@ -691,7 +760,7 @@ private fun ClothingRow(
                 )
                 Text(
                     text = displayText,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -783,8 +852,7 @@ private fun ClothingSelectionDialog(
                             Box(
                                 modifier = Modifier
                                     .size(56.dp)
-                                    .clip(shapes.small)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    .clip(shapes.small),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (item.imageUrl.isNotBlank()) {
